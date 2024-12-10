@@ -65,38 +65,30 @@ pub fn main() !void {
             if (data[r * @as(usize, @intCast(cols)) + c] != 'A') continue;
             const i: i32 = @intCast(r);
             const j: i32 = @intCast(c);
-            const l = [_][2][2][2]i32{
-                [2][2][2]i32{
-                    [2][2]i32{ [2]i32{ i - 1, j - 1 }, [2]i32{ i + 1, j + 1 } },
-                    [2][2]i32{ [2]i32{ i - 1, j + 1 }, [2]i32{ i + 1, j - 1 } },
-                },
-                [2][2][2]i32{
-                    [2][2]i32{ [2]i32{ i, j - 1 }, [2]i32{ i, j + 1 } },
-                    [2][2]i32{ [2]i32{ i - 1, j }, [2]i32{ i + 1, j } },
-                },
+            const l = [2][2][2]i32{
+                [2][2]i32{ [2]i32{ i - 1, j - 1 }, [2]i32{ i + 1, j + 1 } },
+                [2][2]i32{ [2]i32{ i - 1, j + 1 }, [2]i32{ i + 1, j - 1 } },
             };
-            for (l) |p| {
-                var ok: bool = true;
-                for (p) |t| {
-                    var mc: u32 = 0;
-                    var sc: u32 = 0;
-                    for (t) |v| {
-                        if (v[0] < 0 or v[0] >= rows or v[1] < 0 or v[1] >= cols) continue;
-                        switch (data[@as(usize, @intCast(v[0] * cols + v[1]))]) {
-                            'M' => mc += 1,
-                            'S' => sc += 1,
-                            else => {},
-                        }
-                    }
-                    if (mc != 1 or sc != 1) {
-                        ok = false;
-                        break;
+            var ok: bool = true;
+            for (l) |t| {
+                var mc: u32 = 0;
+                var sc: u32 = 0;
+                for (t) |v| {
+                    if (v[0] < 0 or v[0] >= rows or v[1] < 0 or v[1] >= cols) continue;
+                    switch (data[@as(usize, @intCast(v[0] * cols + v[1]))]) {
+                        'M' => mc += 1,
+                        'S' => sc += 1,
+                        else => {},
                     }
                 }
-                if (ok) {
-                    std.debug.print("{{{}, {}}}\n", .{ r, c });
-                    res += 1;
+                if (mc != 1 or sc != 1) {
+                    ok = false;
+                    break;
                 }
+            }
+            if (ok) {
+                std.debug.print("{{{}, {}}}\n", .{ r, c });
+                res += 1;
             }
         }
     }
