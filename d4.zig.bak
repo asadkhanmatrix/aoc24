@@ -1,0 +1,62 @@
+const std = @import("std");
+
+const fileContent = @embedFile("in1");
+
+pub fn main() !void {
+    const allocator = std.heap.c_allocator;
+
+    var inp_buf = try std.ArrayList(u8).initCapacity(allocator, fileContent.len);
+    defer inp_buf.deinit();
+
+    var it = std.mem.tokenizeAny(u8, fileContent, "\n");
+    var rows: i32 = 0;
+    var cols: i32 = 0;
+    while (it.next()) |line| {
+        inp_buf.appendSliceAssumeCapacity(line);
+        rows += 1;
+        cols = @intCast(line.len);
+    }
+    const data = inp_buf.items;
+
+    std.debug.print("rows: {}\ncols: {}\n", .{ rows, cols });
+    std.debug.assert(rows*cols == data.len);
+
+    const find = "XMAS";
+
+    var res: u32 = 0;
+    for (0..@intCast(rows)) |r| {
+        for (0..@intCast(cols)) |c| {
+            if (data[r * @as(usize, @intCast(cols)) + c] != 'X') continue;
+            const i: i32 = @intCast(r);
+            const j: i32 = @intCast(c);
+            const l = [_][4]i32{
+                [4]i32{ i * cols + j, i * cols + j + 1, i * cols + j + 2, i * cols + j + 3 },
+                [4]i32{ i * cols + j, i * cols + j - 1, i * cols + j - 2, i * cols + j - 3 },
+                [4]i32{ i * cols + j, (i + 1) * cols + j, (i + 2) * cols + j, (i + 3) * cols + j },
+                [4]i32{ i * cols + j, (i - 1) * cols + j, (i - 2) * cols + j, (i - 3) * cols + j },
+                [4]i32{ i * cols + j, (i + 1) * cols + j + 1, (i + 2) * cols + j + 2, (i + 3) * cols + j + 3 },
+                [4]i32{ i * cols + j, (i - 1) * cols + j + 1, (i - 2) * cols + j + 2, (i - 3) * cols + j + 3 },
+                [4]i32{ i * cols + j, (i - 1) * cols + j - 1, (i - 2) * cols + j - 2, (i - 3) * cols + j - 3 },
+                [4]i32{ i * cols + j, (i + 1) * cols + j - 1, (i + 2) * cols + j - 2, (i + 3) * cols + j - 3 },
+            };
+            for (l) |t| {
+                var ok: bool = true;
+                for (t, 0..) |v, p| {
+                    if (v < 0 or v >= data.len or data[@as(usize, @intCast(v))] != find[p]) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (ok) {
+                    for (t) |v| {
+                        std.debug.print("{{{}, {}}} ", .{ @divFloor(v,rows), @mod(v,cols) });
+                    }
+                    std.debug.print("\n", .{});
+                    res += 1;
+                }
+            }
+        }
+    }
+
+    std.debug.print("part 1: {}\n", .{res});
+}
