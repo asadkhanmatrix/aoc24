@@ -6,7 +6,7 @@ const State = struct {
     d: Direction,
 };
 
-const Direction = enum(u8) {
+const Direction = enum {
     up,
     right,
     down,
@@ -40,8 +40,60 @@ fn changeInY(d: Direction) i32 {
     };
 }
 
+fn hasCycle(allocator: std.mem.Allocator, g: []const []u8, start_cur: [2]i32, start_dir: Direction) !bool {
+    var seen = std.ArrayList(State).init(allocator);
+    defer seen.deinit();
+    var cur = start_cur;
+    var dir = start_dir;
+    while (cur[0] >= 0 and cur[0] < g.len and cur[1] >= 0 and cur[1] < g[0].len) {
+        switch (g[@intCast(cur[0])][@intCast(cur[1])]) {
+            '#' => {
+                switch (dir) {
+                    .up => {
+                        cur[0] += 1;
+                        cur[1] += 1;
+                        dir = .right;
+                    },
+                    .right => {
+                        cur[0] += 1;
+                        cur[1] -= 1;
+                        dir = .down;
+                    },
+                    .down => {
+                        cur[0] -= 1;
+                        cur[1] -= 1;
+                        dir = .left;
+                    },
+                    .left => {
+                        cur[0] -= 1;
+                        cur[1] += 1;
+                        dir = .up;
+                    },
+                }
+            },
+            else => {
+                var in_seen: bool = false;
+                for (seen.items) |item| {
+                    if (item.x == cur[0] and item.y == cur[1] and item.d == dir) {
+                        in_seen = true;
+                        break;
+                    }
+                }
+                if (in_seen) {
+                    return true;
+                }
+                try seen.append(.{ .x = cur[0], .y = cur[1], .d = dir });
+
+                cur[0] += changeInY(dir);
+                cur[1] += changeInX(dir);
+            },
+        }
+    }
+    return false;
+}
+
 pub fn main() !void {
-    const data = @embedFile("in2");
+    const data = @embedFile("in1");
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -58,7 +110,7 @@ pub fn main() !void {
     }
     var cur = [2]i32{ -1, -1 };
     var dir = Direction.up;
-    for (d.items, 0..) |r, _i| {
+    outer: for (d.items, 0..) |r, _i| {
         for (r, 0..) |c, _j| {
             const i: i32 = @intCast(_i);
             const j: i32 = @intCast(_j);
@@ -79,6 +131,10 @@ pub fn main() !void {
                     cur = [2]i32{ i, j };
                     dir = .left;
                 },
+                else => {},
+            }
+            switch (c) {
+                '^', '>', 'v', '<' => break :outer,
                 else => {},
             }
         }
@@ -128,66 +184,17 @@ pub fn main() !void {
     }
     std.debug.print("part 1: {}\n", .{res});
 
-    cur = start_pos;
-    dir = start_dir;
-    var seen = std.ArrayList(State).init(allocator);
-    defer seen.deinit();
-    while (cur[0] >= 0 and cur[0] < d.items.len and cur[1] >= 0 and cur[1] < d.items[0].len) {
-        switch (d.items[@intCast(cur[0])][@intCast(cur[1])]) {
-            '#' => {
-                switch (dir) {
-                    .up => {
-                        cur[0] += 1;
-                        cur[1] += 1;
-                        dir = .right;
-                    },
-                    .right => {
-                        cur[0] += 1;
-                        cur[1] -= 1;
-                        dir = .down;
-                    },
-                    .down => {
-                        cur[0] -= 1;
-                        cur[1] -= 1;
-                        dir = .left;
-                    },
-                    .left => {
-                        cur[0] -= 1;
-                        cur[1] += 1;
-                        dir = .up;
-                    },
-                }
-            },
-            else => {
-                try seen.append(.{ .x = cur[0], .y = cur[1], .d = dir });
-                var pos = cur;
-                cur[0] += changeInY(dir);
-                cur[1] += changeInX(dir);
-
-                const right_dir = getRight(dir);
-                pos[0] += changeInY(right_dir);
-                pos[1] += changeInX(right_dir);
-                var in_seen: bool = false;
-                for (seen.items) |item| {
-                    if (item.x == pos[0] and item.y == pos[1] and item.d == right_dir) {
-                        in_seen = true;
-                        break;
-                    }
-                }
-                if (in_seen and cur[0] >= 0 and cur[0] < d.items.len and cur[1] >= 0 and cur[1] < d.items[0].len) {
-                    std.debug.print("{{{}, {}}}\n", .{pos[0], pos[1]});
-                    d.items[@intCast(cur[0])][@intCast(cur[1])] = 'o';
-                }
-            },
-        }
-    }
     res = 0;
-    for (d.items) |r| {
-        for (r) |v| {
-            res += if (v == 'o') 1 else 0;
-            std.debug.print("{u}", .{v});
+    for (0..d.items.len) |i| {
+        for (0..d.items[i].len) |j| {
+            const v = d.items[i][j];
+            if (v != '#') {
+                d.items[i][j] = '#';
+                res += if (try hasCycle(allocator, d.items, start_pos, start_dir)) 1 else 0;
+                d.items[i][j] = v;
+                std.debug.print("{{{}, {}}}: {}\n", .{i, j, res});
+            }
         }
-        std.debug.print("\n", .{});
     }
     std.debug.print("part 2: {}\n", .{res});
 }
