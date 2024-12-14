@@ -6,10 +6,7 @@ fn worksPart1(t: i128, c: i128, r: []i128) bool {
     return worksPart1(t, c + r[0], r[1..]) or worksPart1(t, c * r[0], r[1..]);
 }
 
-fn concat(a: i128, b: i128) !i128 {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+fn concat(allocator: std.mem.Allocator, a: i128, b: i128) !i128 {
     const str_a = try std.fmt.allocPrint(allocator, "{}", .{a});
     defer allocator.free(str_a);
     const str_b = try std.fmt.allocPrint(allocator, "{}", .{b});
@@ -19,10 +16,10 @@ fn concat(a: i128, b: i128) !i128 {
     return try std.fmt.parseInt(i128, res, 10);
 }
 
-fn worksPart2(t: i128, c: i128, r: []i128) !bool {
+fn worksPart2(allocator: std.mem.Allocator, t: i128, c: i128, r: []i128) !bool {
     if (r.len == 0) return t == c;
     if (c > t) return false;
-    return (try worksPart2(t, c + r[0], r[1..])) or (try worksPart2(t, c * r[0], r[1..])) or (try worksPart2(t, try concat(c, r[0]), r[1..]));
+    return (try worksPart2(allocator, t, c + r[0], r[1..])) or (try worksPart2(allocator, t, c * r[0], r[1..])) or (try worksPart2(allocator, t, try concat(allocator, c, r[0]), r[1..]));
 }
 
 pub fn main() !void {
@@ -53,7 +50,7 @@ pub fn main() !void {
         if (worksPart1(l[0], l[1], l[2..])) {
             res1 += l[0];
             res2 += l[0];
-        } else if (try worksPart2(l[0], l[1], l[2..])) {
+        } else if (try worksPart2(allocator, l[0], l[1], l[2..])) {
             res2 += l[0];
         }
         std.debug.print("res 1: {} | res 2: {}\n", .{ res1, res2 });
