@@ -94,9 +94,10 @@ fn hasCycle(allocator: std.mem.Allocator, g: []const []u8, start_cur: [2]i32, st
 
 pub fn main() !void {
     const data = @embedFile("in1");
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    // var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    // defer _ = gpa.deinit();
+    // const allocator = gpa.allocator();
+    const allocator = std.heap.c_allocator;
     var d = std.ArrayList([]u8).init(allocator);
     defer {
         for (d.items) |r| {
@@ -178,23 +179,24 @@ pub fn main() !void {
     for (d.items) |r| {
         for (r) |v| {
             res += if (v == 'x') 1 else 0;
-            std.debug.print("{u}", .{v});
+            // std.debug.print("{u}", .{v});
         }
-        std.debug.print("\n", .{});
+        // std.debug.print("\n", .{});
     }
     std.debug.print("part 1: {}\n", .{res});
 
     res = 0;
     for (0..d.items.len) |i| {
         for (0..d.items[i].len) |j| {
+            if (i == start_pos[0] and j == start_pos[1]) continue;
             const v = d.items[i][j];
             if (v != '#') {
                 d.items[i][j] = '#';
                 res += if (try hasCycle(allocator, d.items, start_pos, start_dir)) 1 else 0;
                 d.items[i][j] = v;
-                std.debug.print("{{{}, {}}}: {}\n", .{i, j, res});
             }
         }
+        std.debug.print("after row_{}: {}\n", .{i+1, res});
     }
     std.debug.print("part 2: {}\n", .{res});
 }
