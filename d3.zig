@@ -27,7 +27,7 @@ fn getDType(c: u8) DType {
 }
 
 pub fn main() !void {
-    const data = @embedFile("in3");
+    const data = @embedFile("in1");
     var expected: DType = .m;
     var num1: i32 = 0;
     var num2: i32 = 0;
