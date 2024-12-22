@@ -1,5 +1,16 @@
 const std = @import("std");
 
+fn dfs2(g: std.ArrayList([]u8), r: usize, c: usize, score: *u32) void {
+    if (g.items[r][c] == '9') {
+        score.* += 1;
+        return;
+    }
+    if (r + 1 < g.items.len and g.items[r + 1][c] == g.items[r][c] + 1) dfs2(g, r + 1, c, score);
+    if (r > 0 and g.items[r - 1][c] == g.items[r][c] + 1) dfs2(g, r - 1, c, score);
+    if (c + 1 < g.items[0].len and g.items[r][c + 1] == g.items[r][c] + 1) dfs2(g, r, c + 1, score);
+    if (c > 0 and g.items[r][c - 1] == g.items[r][c] + 1) dfs2(g, r, c - 1, score);
+}
+
 fn dfs(g: std.ArrayList([]u8), r: usize, c: usize, vis: [][]bool, score: *u32) void {
     vis[r][c] = true;
     if (g.items[r][c] == '9') {
@@ -53,4 +64,16 @@ pub fn main() !void {
         }
     }
     std.debug.print("part 1: {}\n", .{res});
+    res = 0;
+    for (g.items, 0..) |_, r| {
+        for (g.items[r], 0..) |v, c| {
+            if (v == '0') {
+                var score: u32 = 0;
+                _ = dfs2(g, r, c, &score);
+                // std.debug.print("{{{}, {}}}: {}\n", .{r, c, score});
+                res += score;
+            }
+        }
+    }
+    std.debug.print("part 2: {}\n", .{res});
 }
