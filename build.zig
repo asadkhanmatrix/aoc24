@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe_count = 10; // You can change this number dynamically
+    const exe_count = 11; // You can change this number dynamically
     var executables = [_]*std.Build.Step.Compile{ undefined } ** exe_count;
 
     inline for (0..exe_count) |i| {
