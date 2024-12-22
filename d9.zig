@@ -57,8 +57,7 @@ pub fn main() !void {
         fi -= 1;
         for (spaces.items) |*s| {
             // ptr check is to ensure that files are only moved forward
-            // since heap memory grows from low to high we can compare pointers to ensure this condition
-            // ... it's beautiful, i know. /s
+            // since arrays grows from low to high we can compare pointers to ensure this condition
             if (files.items[fi].len <= s.len and @intFromPtr(s.ptr) < @intFromPtr(files.items[fi].ptr)) {
                 std.mem.copyForwards(i32, s.*, files.items[fi]);
                 s.* = s.*[files.items[fi].len..];
