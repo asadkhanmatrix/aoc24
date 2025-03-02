@@ -1,16 +1,27 @@
 const std = @import("std");
 
-const dir = [4][2]i8{
-    [2]i8{ 1, 0 },
-    [2]i8{ 0, 1 },
-    [2]i8{ -1, 0 },
-    [2]i8{ 0, -1 },
+const dir = [_][2]i8{
+    [_]i8{ 1, 0 },
+    [_]i8{ 0, 1 },
+    [_]i8{ -1, 0 },
+    [_]i8{ 0, -1 },
+};
+
+const all_dir = [_][2]i8{
+    [_]i8{ 0, -1 },
+    [_]i8{ -1, -1 },
+    [_]i8{ -1, 0 },
+    [_]i8{ -1, 1 },
+    [_]i8{ 0, 1 },
+    [_]i8{ 1, 1 },
+    [_]i8{ 1, 0 },
+    [_]i8{ 1, -1 },
 };
 
 fn dfs2(g: std.ArrayList([]const u8), r: usize, c: usize, vis: [][]bool, area: *u32, side: *u32) void {
     vis[r][c] = true;
     area.* += 1;
-    var d = [_]u8{0} ** 4;
+    var d = [_]u8{0} ** all_dir.len;
     for (dir, 0..) |arr, i| {
         const nr: i32 = @as(i32, @intCast(r)) + arr[0];
         const nc: i32 = @as(i32, @intCast(c)) + arr[1];
@@ -22,8 +33,14 @@ fn dfs2(g: std.ArrayList([]const u8), r: usize, c: usize, vis: [][]bool, area: *
             dfs2(g, @intCast(nr), @intCast(nc), vis, area, side);
         }
     }
-    for (0..4) |i| {
-        if (d[i] == 1 and d[@mod(i + 1, 4)] == 1) {
+    for (all_dir, 0..) |arr, i| {
+        const nr: i32 = @as(i32, @intCast(r)) + arr[0];
+        const nc: i32 = @as(i32, @intCast(c)) + arr[1];
+        d[i] = if (nr < 0 or nr >= g.items.len or nc < 0 or nc >= g.items[0].len or g.items[@intCast(nr)][@intCast(nc)] != g.items[r][c]) 0 else 1;
+    }
+    var i: u8 = 0;
+    while (i < d.len) : (i += 2) {
+        if ((d[i] == 0 and d[(i + 2) % d.len] == 0) or (d[i] == 1 and d[i + 1] == 0 and d[(i + 2) % d.len] == 1)) {
             side.* += 1;
         }
     }
@@ -49,7 +66,7 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
-    const data = @embedFile("in2");
+    const data = @embedFile("in1");
     var it = std.mem.tokenizeAny(u8, data, "\n");
     var g = std.ArrayList([]const u8).init(allocator);
     defer {
