@@ -4,11 +4,11 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe_count = 12; // You can change this number dynamically
+    const exe_count = 13; // You can change this number dynamically
     var executables = [_]*std.Build.Step.Compile{ undefined } ** exe_count;
 
     inline for (0..exe_count) |i| {
-        const filename = try std.fmt.allocPrint(b.allocator, "d{d}.zig", .{i + 1});
+        const filename = try std.fmt.allocPrint(b.allocator, "src/d{d}.zig", .{i + 1});
         defer b.allocator.free(filename);
         
         executables[i] = b.addExecutable(.{
