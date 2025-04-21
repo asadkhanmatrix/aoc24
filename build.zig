@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const exe_count = 13; // You can change this number dynamically
+    const exe_count = 14; // You can change this number dynamically
     var executables = [_]*std.Build.Step.Compile{ undefined } ** exe_count;
 
     inline for (0..exe_count) |i| {
@@ -12,7 +12,7 @@ pub fn build(b: *std.Build) !void {
         defer b.allocator.free(filename);
         
         executables[i] = b.addExecutable(.{
-            .name = filename[0..filename.len-4], // remove .zig
+            .name = filename[4..filename.len-4], // remove .zig
             .root_source_file = b.path(filename),
             .optimize = optimize,
             .target = target,
